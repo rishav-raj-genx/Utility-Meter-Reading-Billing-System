@@ -86,6 +86,13 @@ const seed = async () => {
       role: 'admin',
     });
 
+    const userAdmin = await User.create({
+      name: 'Rishav Raj',
+      email: 'rishavraj.rr1234@gmail.com',
+      password: '123456',
+      role: 'admin',
+    });
+
     // Meter Reader
     const reader = await User.create({
       name: 'Rajesh Kumar',
