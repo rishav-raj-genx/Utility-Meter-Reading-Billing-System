@@ -42,4 +42,11 @@ router.get('/tariffs', adminController.listTariffs);
 router.post('/tariffs', adminController.createTariff);
 router.post('/tariffs/:id/delete', adminController.deleteTariff);
 
+// -------------------------------------------------------------------------
+// Meter Reader Management
+// -------------------------------------------------------------------------
+router.get('/readers', adminController.listReaders);
+router.post('/readers', adminController.createReader);
+router.post('/readers/:id/delete', adminController.deleteReader);
+
 export default router;

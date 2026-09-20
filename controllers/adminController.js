@@ -354,3 +354,58 @@ export const deleteTariff = async (req, res) => {
     res.redirect('/admin/tariffs');
   }
 };
+
+// =============================================================================
+// METER READER MANAGEMENT
+// =============================================================================
+
+export const listReaders = async (req, res) => {
+  try {
+    const readers = await User.find({ role: 'meter_reader' }).sort({ createdAt: -1 }).lean();
+    res.render('admin/readers', {
+      title: 'Manage Meter Readers',
+      readers,
+    });
+  } catch (error) {
+    console.error('List readers error:', error);
+    req.flash('error', 'Failed to load meter readers.');
+    res.redirect('/admin/dashboard');
+  }
+};
+
+export const createReader = async (req, res) => {
+  try {
+    const { name, email, password, phone } = req.body;
+    const existing = await User.findOne({ email });
+    if (existing) {
+      req.flash('error', 'A user with this email already exists.');
+      return res.redirect('/admin/readers');
+    }
+    await User.create({
+      name,
+      email,
+      password,
+      role: 'meter_reader',
+      phone,
+    });
+    req.flash('success', 'Meter Reader created successfully.');
+    res.redirect('/admin/readers');
+  } catch (error) {
+    console.error('Create reader error:', error);
+    req.flash('error', 'Failed to create meter reader.');
+    res.redirect('/admin/readers');
+  }
+};
+
+export const deleteReader = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await User.findByIdAndDelete(id);
+    req.flash('success', 'Meter Reader deleted.');
+    res.redirect('/admin/readers');
+  } catch (error) {
+    console.error('Delete reader error:', error);
+    req.flash('error', 'Failed to delete meter reader.');
+    res.redirect('/admin/readers');
+  }
+};
