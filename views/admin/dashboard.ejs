@@ -1,0 +1,226 @@
+<!-- ==========================================================================
+     views/admin/dashboard.ejs — Admin Analytics Dashboard
+     ==========================================================================
+     Displays: stat cards, paid/unpaid pie chart, monthly trend bar chart,
+     and top consumers table.
+     ========================================================================== -->
+
+<%- include('../partials/header') %>
+
+<!-- Page Title -->
+<div class="mb-8">
+  <h1 class="text-3xl font-bold text-white">Admin Dashboard</h1>
+  <p class="text-gray-400 mt-1">Overview of billing, revenue, and consumption analytics</p>
+</div>
+
+<!-- ==========================================================================
+     Stat Cards Row
+     ========================================================================== -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+  <!-- Total Bills -->
+  <div class="card-hover bg-surface-800/60 backdrop-blur border border-primary-800/20 rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-sm font-medium text-gray-400">Total Bills</span>
+      <div class="w-10 h-10 bg-primary-500/10 rounded-xl flex items-center justify-center">
+        <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      </div>
+    </div>
+    <p class="text-3xl font-bold text-white"><%= totalBills %></p>
+  </div>
+
+  <!-- Paid Bills -->
+  <div class="card-hover bg-surface-800/60 backdrop-blur border border-emerald-800/20 rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-sm font-medium text-gray-400">Paid Bills</span>
+      <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-3xl font-bold text-emerald-400"><%= paidBills %></p>
+    <p class="text-xs text-gray-500 mt-1">Pending: <%= pendingBills %> | Overdue: <%= overdueBills %></p>
+  </div>
+
+  <!-- Total Units -->
+  <div class="card-hover bg-surface-800/60 backdrop-blur border border-amber-800/20 rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-sm font-medium text-gray-400">Total Units Billed</span>
+      <div class="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center">
+        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+    </div>
+    <p class="text-3xl font-bold text-amber-400"><%= totalUnits.toLocaleString() %> <span class="text-sm font-normal text-gray-500">kWh</span></p>
+  </div>
+
+  <!-- Total Revenue -->
+  <div class="card-hover bg-surface-800/60 backdrop-blur border border-accent-800/20 rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-3">
+      <span class="text-sm font-medium text-gray-400">Revenue Collected</span>
+      <div class="w-10 h-10 bg-accent-500/10 rounded-xl flex items-center justify-center">
+        <svg class="w-5 h-5 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-3xl font-bold text-accent-400">₹<%= totalRevenue.toLocaleString() %></p>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     Charts Row
+     ========================================================================== -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  <!-- Paid vs Unpaid Pie Chart -->
+  <div class="bg-surface-800/60 backdrop-blur border border-primary-800/20 rounded-2xl p-6">
+    <h2 class="text-lg font-semibold text-white mb-4">Bill Status Distribution</h2>
+    <div class="relative h-64">
+      <canvas id="statusChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Monthly Trend Bar Chart -->
+  <div class="bg-surface-800/60 backdrop-blur border border-primary-800/20 rounded-2xl p-6">
+    <h2 class="text-lg font-semibold text-white mb-4">Monthly Billing Trend</h2>
+    <div class="relative h-64">
+      <canvas id="trendChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     Summary Row (Consumers & Meters Count)
+     ========================================================================== -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+  <div class="card-hover bg-surface-800/60 backdrop-blur border border-primary-800/20 rounded-2xl p-6 flex items-center space-x-4">
+    <div class="w-12 h-12 bg-primary-500/10 rounded-xl flex items-center justify-center">
+      <svg class="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    </div>
+    <div>
+      <p class="text-sm text-gray-400">Registered Consumers</p>
+      <p class="text-2xl font-bold text-white"><%= totalConsumers %></p>
+    </div>
+  </div>
+  <div class="card-hover bg-surface-800/60 backdrop-blur border border-primary-800/20 rounded-2xl p-6 flex items-center space-x-4">
+    <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+      <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+    </div>
+    <div>
+      <p class="text-sm text-gray-400">Active Meters</p>
+      <p class="text-2xl font-bold text-white"><%= totalMeters %></p>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     Top Consumers Table
+     ========================================================================== -->
+<div class="bg-surface-800/60 backdrop-blur border border-primary-800/20 rounded-2xl p-6">
+  <h2 class="text-lg font-semibold text-white mb-4">Top Consumers by Units</h2>
+  <% if (topConsumers.length === 0) { %>
+    <p class="text-gray-500 text-center py-8">No billing data available yet.</p>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-primary-800/30">
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Rank</th>
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Consumer</th>
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Consumer ID</th>
+            <th class="text-right py-3 px-4 text-sm font-medium text-gray-400">Total Units</th>
+            <th class="text-right py-3 px-4 text-sm font-medium text-gray-400">Total Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% topConsumers.forEach((consumer, index) => { %>
+            <tr class="table-row-hover border-b border-primary-800/10">
+              <td class="py-3 px-4">
+                <span class="w-7 h-7 rounded-lg bg-primary-500/10 text-primary-400 text-sm font-bold flex items-center justify-center"><%= index + 1 %></span>
+              </td>
+              <td class="py-3 px-4 text-white font-medium"><%= consumer.name %></td>
+              <td class="py-3 px-4 text-gray-400 text-sm"><%= consumer.consumerId || '—' %></td>
+              <td class="py-3 px-4 text-right text-amber-400 font-semibold"><%= consumer.totalUnits.toLocaleString() %> kWh</td>
+              <td class="py-3 px-4 text-right text-accent-400 font-semibold">₹<%= consumer.totalAmount.toLocaleString() %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<!-- ==========================================================================
+     Chart.js Scripts
+     ========================================================================== -->
+<script>
+  // -------------------------------------------------------------------------
+  // Pie Chart: Bill Status Distribution (Paid vs Pending vs Overdue)
+  // -------------------------------------------------------------------------
+  const statusCtx = document.getElementById('statusChart').getContext('2d');
+  new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Paid', 'Pending', 'Overdue'],
+      datasets: [{
+        data: [<%= paidBills %>, <%= pendingBills %>, <%= overdueBills %>],
+        backgroundColor: ['#34d399', '#fbbf24', '#f87171'],
+        borderColor: ['#059669', '#d97706', '#dc2626'],
+        borderWidth: 2,
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#9ca3af', font: { family: 'Inter' }, padding: 16 }
+        }
+      }
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // Bar Chart: Monthly Billing Trend
+  // -------------------------------------------------------------------------
+  const trendCtx = document.getElementById('trendChart').getContext('2d');
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const trendData = <%- JSON.stringify(monthlyTrend) %>;
+
+  new Chart(trendCtx, {
+    type: 'bar',
+    data: {
+      labels: trendData.map(d => monthNames[d._id.month - 1] + ' ' + d._id.year),
+      datasets: [
+        {
+          label: 'Units (kWh)',
+          data: trendData.map(d => d.totalUnits),
+          backgroundColor: 'rgba(99, 102, 241, 0.5)',
+          borderColor: '#6366f1',
+          borderWidth: 1,
+          borderRadius: 6,
+        },
+        {
+          label: 'Amount (₹)',
+          data: trendData.map(d => d.totalAmount),
+          backgroundColor: 'rgba(167, 139, 250, 0.5)',
+          borderColor: '#a78bfa',
+          borderWidth: 1,
+          borderRadius: 6,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(99, 102, 241, 0.1)' } },
+        y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(99, 102, 241, 0.1)' } }
+      },
+      plugins: {
+        legend: {
+          labels: { color: '#9ca3af', font: { family: 'Inter' }, padding: 16 }
+        }
+      }
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,124 @@
+<!-- ==========================================================================
+     views/consumer/bill-detail.ejs — Detailed Bill View
+     ==========================================================================
+     Shows complete bill breakdown: slab-wise charges, fixed charge, surcharge,
+     total, payment status, and a pay button if unpaid.
+     ========================================================================== -->
+
+<%- include('../partials/header') %>
+
+<div class="max-w-2xl mx-auto">
+  <!-- Back Link -->
+  <a href="/consumer/bills" class="inline-flex items-center text-sm text-gray-400 hover:text-primary-400 transition-colors mb-6">
+    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    Back to Bills
+  </a>
+
+  <!-- Bill Detail Card -->
+  <div class="bg-surface-800/60 backdrop-blur border border-primary-800/20 rounded-2xl overflow-hidden">
+    <!-- Bill Header -->
+    <div class="bg-gradient-to-r from-primary-600/20 to-accent-600/20 p-6 border-b border-primary-800/20">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-white">Electricity Bill</h1>
+          <p class="text-gray-400 mt-1">Billing Period: <span class="text-white font-medium"><%= bill.billingPeriod.month %>/<%= bill.billingPeriod.year %></span></p>
+        </div>
+        <span class="text-sm font-medium px-3 py-1.5 rounded-full
+          <%= bill.status === 'paid' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : bill.status === 'overdue' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30' %>
+        "><%= bill.status.toUpperCase() %></span>
+      </div>
+    </div>
+
+    <div class="p-6 space-y-6">
+      <!-- Consumer & Meter Info -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-surface-900/40 rounded-xl p-4 space-y-2">
+          <p class="text-xs text-gray-500 uppercase tracking-wider">Consumer</p>
+          <p class="text-white font-medium"><%= bill.consumer.name %></p>
+          <p class="text-sm text-gray-400"><%= bill.consumer.consumerId || '' %></p>
+          <p class="text-sm text-gray-400"><%= bill.consumer.connectionType %></p>
+        </div>
+        <div class="bg-surface-900/40 rounded-xl p-4 space-y-2">
+          <p class="text-xs text-gray-500 uppercase tracking-wider">Meter Details</p>
+          <p class="text-primary-300 font-mono"><%= bill.meter ? bill.meter.meterNumber : '—' %></p>
+          <p class="text-sm text-gray-400">Prev: <%= bill.previousReading %> kWh</p>
+          <p class="text-sm text-gray-400">Curr: <%= bill.currentReading %> kWh</p>
+        </div>
+      </div>
+
+      <!-- Units Consumed Highlight -->
+      <div class="text-center bg-primary-500/10 border border-primary-500/20 rounded-xl p-4">
+        <p class="text-sm text-gray-400">Units Consumed</p>
+        <p class="text-4xl font-extrabold text-primary-400"><%= bill.unitsConsumed %></p>
+        <p class="text-sm text-gray-500">kWh</p>
+      </div>
+
+      <!-- Slab-wise Breakdown -->
+      <div>
+        <h2 class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Slab-wise Breakdown</h2>
+        <div class="space-y-2">
+          <% bill.slabBreakdown.forEach(tier => { %>
+            <div class="flex items-center justify-between py-2.5 px-4 bg-surface-900/30 rounded-lg">
+              <div>
+                <p class="text-sm text-white"><%= tier.slab %></p>
+                <p class="text-xs text-gray-500"><%= tier.units %> units × ₹<%= tier.rate %></p>
+              </div>
+              <span class="text-white font-semibold">₹<%= tier.amount.toLocaleString() %></span>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+
+      <!-- Charges Summary -->
+      <div class="border-t border-primary-800/20 pt-4 space-y-3">
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-400">Fixed Charge</span>
+          <span class="text-white">₹<%= bill.fixedCharge %></span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-400">Subtotal</span>
+          <span class="text-white font-medium">₹<%= bill.subtotal.toLocaleString() %></span>
+        </div>
+        <% if (bill.surcharge > 0) { %>
+          <div class="flex justify-between text-sm">
+            <span class="text-red-400">Late Payment Surcharge</span>
+            <span class="text-red-400 font-medium">+₹<%= bill.surcharge %></span>
+          </div>
+        <% } %>
+        <div class="flex justify-between text-lg border-t border-primary-800/20 pt-3">
+          <span class="text-white font-bold">Total Amount</span>
+          <span class="text-2xl font-extrabold bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent">₹<%= bill.totalAmount.toLocaleString() %></span>
+        </div>
+      </div>
+
+      <!-- Due Date & Payment Info -->
+      <div class="flex items-center justify-between bg-surface-900/40 rounded-xl p-4">
+        <div>
+          <p class="text-xs text-gray-500">Due Date</p>
+          <p class="text-white font-medium"><%= new Date(bill.dueDate).toLocaleDateString() %></p>
+        </div>
+        <% if (bill.paidAt) { %>
+          <div class="text-right">
+            <p class="text-xs text-gray-500">Paid On</p>
+            <p class="text-emerald-400 font-medium"><%= new Date(bill.paidAt).toLocaleDateString() %></p>
+          </div>
+        <% } %>
+      </div>
+
+      <!-- Pay Button -->
+      <% if (bill.status !== 'paid') { %>
+        <form action="/consumer/bills/<%= bill._id %>/pay" method="POST">
+          <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold rounded-xl hover:from-emerald-500 hover:to-emerald-400 transition-all shadow-lg shadow-emerald-500/25 text-lg">
+            Pay ₹<%= bill.totalAmount.toLocaleString() %>
+          </button>
+        </form>
+      <% } else { %>
+        <div class="text-center py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+          <p class="text-emerald-400 font-semibold">✓ This bill has been paid</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,230 @@
+<!-- ==========================================================================
+     views/admin/consumers.ejs — Consumer Management Page
+     ==========================================================================
+     CRUD interface for managing consumer users. Includes add form,
+     edit modals, and delete functionality.
+     ========================================================================== -->
+
+<%- include('../partials/header') %>
+
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-8">
+  <div>
+    <h1 class="text-3xl font-bold text-white">Manage Consumers</h1>
+    <p class="text-gray-400 mt-1">Create, update, and manage consumer accounts</p>
+  </div>
+  <button
+    onclick="document.getElementById('addConsumerModal').classList.remove('hidden')"
+    class="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold rounded-xl hover:from-primary-500 hover:to-accent-500 transition-all shadow-lg shadow-primary-500/25 flex items-center space-x-2"
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+    <span>Add Consumer</span>
+  </button>
+</div>
+
+<!-- ==========================================================================
+     Consumers Table
+     ========================================================================== -->
+<div class="bg-surface-800/60 backdrop-blur border border-primary-800/20 rounded-2xl overflow-hidden">
+  <% if (consumers.length === 0) { %>
+    <div class="text-center py-16">
+      <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <p class="text-gray-500">No consumers found. Add your first consumer.</p>
+    </div>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-surface-900/40">
+          <tr>
+            <th class="text-left py-3 px-5 text-sm font-medium text-gray-400">Consumer ID</th>
+            <th class="text-left py-3 px-5 text-sm font-medium text-gray-400">Name</th>
+            <th class="text-left py-3 px-5 text-sm font-medium text-gray-400">Email</th>
+            <th class="text-left py-3 px-5 text-sm font-medium text-gray-400">Connection</th>
+            <th class="text-left py-3 px-5 text-sm font-medium text-gray-400">Tariff Slab</th>
+            <th class="text-left py-3 px-5 text-sm font-medium text-gray-400">Phone</th>
+            <th class="text-right py-3 px-5 text-sm font-medium text-gray-400">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% consumers.forEach(consumer => { %>
+            <tr class="table-row-hover border-t border-primary-800/10">
+              <td class="py-3 px-5">
+                <span class="text-sm font-mono text-primary-300 bg-primary-500/10 px-2 py-0.5 rounded"><%= consumer.consumerId || '—' %></span>
+              </td>
+              <td class="py-3 px-5 text-white font-medium"><%= consumer.name %></td>
+              <td class="py-3 px-5 text-gray-400 text-sm"><%= consumer.email %></td>
+              <td class="py-3 px-5">
+                <span class="text-xs font-medium px-2 py-1 rounded-full
+                  <%= consumer.connectionType === 'domestic' ? 'bg-emerald-500/10 text-emerald-400' : consumer.connectionType === 'commercial' ? 'bg-amber-500/10 text-amber-400' : 'bg-red-500/10 text-red-400' %>
+                "><%= consumer.connectionType %></span>
+              </td>
+              <td class="py-3 px-5 text-gray-400 text-sm"><%= consumer.tariffSlab ? consumer.tariffSlab.name : '—' %></td>
+              <td class="py-3 px-5 text-gray-400 text-sm"><%= consumer.phone || '—' %></td>
+              <td class="py-3 px-5 text-right">
+                <div class="flex items-center justify-end space-x-2">
+                  <!-- Edit button -->
+                  <button
+                    onclick="openEditModal('<%= consumer._id %>', '<%= consumer.name %>', '<%= consumer.consumerId %>', '<%= consumer.connectionType %>', '<%= consumer.tariffSlab ? consumer.tariffSlab._id : '' %>', '<%= consumer.address || '' %>', '<%= consumer.phone || '' %>')"
+                    class="px-3 py-1.5 text-xs font-medium bg-primary-500/10 text-primary-400 rounded-lg hover:bg-primary-500/20 transition-all"
+                  >Edit</button>
+                  <!-- Delete -->
+                  <form action="/admin/consumers/<%= consumer._id %>/delete" method="POST" onsubmit="return confirm('Delete this consumer?')">
+                    <button type="submit" class="px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-all">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<!-- ==========================================================================
+     Add Consumer Modal
+     ========================================================================== -->
+<div id="addConsumerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="bg-surface-800 border border-primary-800/30 rounded-2xl p-8 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold text-white">Add New Consumer</h2>
+      <button onclick="document.getElementById('addConsumerModal').classList.add('hidden')" class="text-gray-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form action="/admin/consumers" method="POST" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
+          <input type="text" name="name" required class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Consumer ID</label>
+          <input type="text" name="consumerId" required placeholder="e.g., CON-001" class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+        <input type="email" name="email" required class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+        <input type="password" name="password" required minlength="6" class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Connection Type</label>
+          <select name="connectionType" class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50">
+            <option value="domestic">Domestic</option>
+            <option value="commercial">Commercial</option>
+            <option value="industrial">Industrial</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Tariff Slab</label>
+          <select name="tariffSlab" class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50">
+            <option value="">— None —</option>
+            <% tariffSlabs.forEach(slab => { %>
+              <option value="<%= slab._id %>"><%= slab.name %> (<%= slab.connectionType %>)</option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Address</label>
+        <input type="text" name="address" class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Phone</label>
+        <input type="text" name="phone" class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+      </div>
+
+      <button type="submit" class="w-full py-3 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold rounded-xl hover:from-primary-500 hover:to-accent-500 transition-all shadow-lg">
+        Create Consumer
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     Edit Consumer Modal
+     ========================================================================== -->
+<div id="editConsumerModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="bg-surface-800 border border-primary-800/30 rounded-2xl p-8 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold text-white">Edit Consumer</h2>
+      <button onclick="document.getElementById('editConsumerModal').classList.add('hidden')" class="text-gray-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form id="editConsumerForm" method="POST" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
+          <input type="text" name="name" id="editName" required class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Consumer ID</label>
+          <input type="text" name="consumerId" id="editConsumerId" required class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Connection Type</label>
+          <select name="connectionType" id="editConnectionType" class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50">
+            <option value="domestic">Domestic</option>
+            <option value="commercial">Commercial</option>
+            <option value="industrial">Industrial</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Tariff Slab</label>
+          <select name="tariffSlab" id="editTariffSlab" class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50">
+            <option value="">— None —</option>
+            <% tariffSlabs.forEach(slab => { %>
+              <option value="<%= slab._id %>"><%= slab.name %> (<%= slab.connectionType %>)</option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Address</label>
+        <input type="text" name="address" id="editAddress" class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Phone</label>
+        <input type="text" name="phone" id="editPhone" class="w-full px-3 py-2.5 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+      </div>
+
+      <button type="submit" class="w-full py-3 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold rounded-xl hover:from-primary-500 hover:to-accent-500 transition-all shadow-lg">
+        Update Consumer
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Open edit modal and populate fields
+  function openEditModal(id, name, consumerId, connectionType, tariffSlab, address, phone) {
+    document.getElementById('editConsumerForm').action = '/admin/consumers/' + id + '/update';
+    document.getElementById('editName').value = name;
+    document.getElementById('editConsumerId').value = consumerId;
+    document.getElementById('editConnectionType').value = connectionType;
+    document.getElementById('editTariffSlab').value = tariffSlab;
+    document.getElementById('editAddress').value = address;
+    document.getElementById('editPhone').value = phone;
+    document.getElementById('editConsumerModal').classList.remove('hidden');
+  }
+</script>
+
+<%- include('../partials/footer') %>
