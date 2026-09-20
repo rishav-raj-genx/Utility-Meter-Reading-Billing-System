@@ -8,7 +8,13 @@
     "dev": "nodemon app.js",
     "seed": "node seed.js"
   },
-  "keywords": ["utility", "billing", "meter-reading", "express", "ejs"],
+  "keywords": [
+    "utility",
+    "billing",
+    "meter-reading",
+    "express",
+    "ejs"
+  ],
   "author": "PS-7",
   "license": "ISC",
   "devEngines": {
@@ -29,6 +35,7 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "express-validator": "^7.3.2",
+    "mongodb": "^7.6.0",
     "mongoose": "^9.10.1",
     "node-cron": "^4.6.0"
   },

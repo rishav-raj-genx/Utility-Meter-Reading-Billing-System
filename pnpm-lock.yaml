@@ -231,6 +231,9 @@ importers:
       express-validator:
         specifier: ^7.3.2
         version: 7.3.2
+      mongodb:
+        specifier: ^7.6.0
+        version: 7.6.0
       mongoose:
         specifier: ^9.10.1
         version: 9.10.1
