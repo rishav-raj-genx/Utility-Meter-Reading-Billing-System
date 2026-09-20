@@ -66,10 +66,12 @@ export const renderLogin = (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
 
     // Find user by email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
+      console.log(`Login failed: User not found for email: ${normalizedEmail}`);
       req.flash('error', 'Invalid email or password.');
       return res.redirect('/auth/login');
     }
@@ -77,6 +79,7 @@ export const login = async (req, res) => {
     // Verify password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      console.log(`Login failed: Invalid password for user: ${normalizedEmail}`);
       req.flash('error', 'Invalid email or password.');
       return res.redirect('/auth/login');
     }
