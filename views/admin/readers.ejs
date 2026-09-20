@@ -1,0 +1,103 @@
+<!-- ==========================================================================
+     views/admin/readers.ejs — Meter Reader Management Page
+     ==========================================================================
+     CRUD interface for managing meter reader accounts.
+     ========================================================================== -->
+
+<%- include('../partials/header') %>
+
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-8">
+  <div>
+    <h1 class="text-3xl font-bold text-white">Manage Meter Readers</h1>
+    <p class="text-gray-400 mt-1">Create, update, and manage meter reader accounts</p>
+  </div>
+  <button
+    onclick="document.getElementById('addReaderModal').classList.remove('hidden')"
+    class="px-5 py-2.5 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold rounded-xl hover:from-primary-500 hover:to-accent-500 transition-all shadow-lg shadow-primary-500/25 flex items-center space-x-2"
+  >
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+    <span>Add Reader</span>
+  </button>
+</div>
+
+<!-- Readers Table -->
+<div class="bg-surface-800/60 backdrop-blur border border-primary-800/20 rounded-2xl overflow-hidden">
+  <% if (readers.length === 0) { %>
+    <div class="text-center py-16">
+      <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <p class="text-gray-500">No meter readers found.</p>
+    </div>
+  <% } else { %>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-surface-900/40">
+          <tr>
+            <th class="text-left py-3 px-5 text-sm font-medium text-gray-400">Name</th>
+            <th class="text-left py-3 px-5 text-sm font-medium text-gray-400">Email</th>
+            <th class="text-left py-3 px-5 text-sm font-medium text-gray-400">Phone</th>
+            <th class="text-right py-3 px-5 text-sm font-medium text-gray-400">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% readers.forEach(reader => { %>
+            <tr class="table-row-hover border-t border-primary-800/10">
+              <td class="py-3 px-5 text-white font-medium"><%= reader.name %></td>
+              <td class="py-3 px-5 text-gray-400"><%= reader.email %></td>
+              <td class="py-3 px-5 text-gray-400"><%= reader.phone || '—' %></td>
+              <td class="py-3 px-5 text-right">
+                <div class="flex justify-end space-x-2">
+                  <form action="/admin/readers/<%= reader._id %>/delete" method="POST" onsubmit="return confirm('Are you sure you want to delete this meter reader?');">
+                    <button type="submit" class="px-3 py-1.5 text-xs font-medium bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-all">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<!-- ==========================================================================
+     Add Reader Modal
+     ========================================================================== -->
+<div id="addReaderModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm overflow-y-auto pt-10 pb-10">
+  <div class="bg-surface-800 border border-primary-800/30 rounded-2xl p-8 w-full max-w-md shadow-2xl my-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl font-bold text-white">Add New Meter Reader</h2>
+      <button onclick="document.getElementById('addReaderModal').classList.add('hidden')" class="text-gray-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form action="/admin/readers" method="POST" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
+        <input type="text" name="name" required class="w-full px-3 py-2 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
+        <input type="email" name="email" required class="w-full px-3 py-2 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+        <input type="password" name="password" required class="w-full px-3 py-2 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Phone Number</label>
+        <input type="text" name="phone" class="w-full px-3 py-2 bg-surface-900/60 border border-primary-800/30 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50" />
+      </div>
+
+      <button type="submit" class="w-full py-3 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold rounded-xl hover:from-primary-500 hover:to-accent-500 transition-all shadow-lg mt-4">
+        Create Meter Reader
+      </button>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
